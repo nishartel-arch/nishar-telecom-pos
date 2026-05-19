@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Nishar Telecom POS</title>
+
+<link rel="manifest" href="manifest.json"/>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+<link rel="stylesheet" href="style.css"/>
+
+</head>
+
+<body>
+
+<!-- LOGIN SCREEN -->
+
+<div id="login-page" class="login-page">
+
+  <div class="login-card">
+
+    <h1>Nishar Telecom</h1>
+
+    <p>Cloud POS System</p>
+
+    <input
+      type="email"
+      id="email"
+      placeholder="Email Address"
+    />
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+    />
+
+    <button onclick="login()">
+      Login
+    </button>
+
+    <button class="secondary-btn" onclick="register()">
+      Create Account
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- APP -->
+
+<div id="app" style="display:none;">
+
+  <div class="sidebar">
+
+    <div class="logo">
+      Nishar Telecom
+    </div>
+
+    <div class="nav-item active">
+      Dashboard
+    </div>
+
+    <div class="nav-item">
+      Billing
+    </div>
+
+    <div class="nav-item">
+      Inventory
+    </div>
+
+    <div class="nav-item">
+      Sales
+    </div>
+
+    <div class="nav-item">
+      Customers
+    </div>
+
+    <div class="nav-item">
+      Analytics
+    </div>
+
+    <div class="nav-item" onclick="logout()">
+      Logout
+    </div>
+
+  </div>
+
+
+  <div class="main-content">
+
+    <div class="topbar">
+
+<h2>Dashboard</h2>
+
+<button onclick="openAddProductModal()">
++ Product
+</button>
+
+</div>
+
+
+<!-- DASHBOARD -->
+
+<div class="dashboard-grid">
+
+<div class="card">
+<h3>Total Products</h3>
+<div class="big-number" id="total-products">
+0
+</div>
+</div>
+
+<div class="card">
+<h3>Low Stock</h3>
+<div class="big-number" id="low-stock">
+0
+</div>
+</div>
+
+</div>
+
+
+<!-- INVENTORY -->
+
+<div class="inventory-section">
+
+<h2>Inventory</h2>
+
+<table class="product-table">
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Category</th>
+<th>Stock</th>
+<th>Price</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="product-list">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+  </div>
+
+</div>
+
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="auth.js"></script>
+<script type="module" src="app.js"></script>
+<!-- PRODUCT MODAL -->
+
+<div id="product-modal" class="modal">
+
+<div class="modal-content">
+
+<h2>Add Product</h2>
+
+<input
+type="text"
+id="product-name"
+placeholder="Product Name"
+/>
+
+<input
+type="text"
+id="product-category"
+placeholder="Category"
+/>
+
+<input
+type="number"
+id="product-stock"
+placeholder="Stock"
+/>
+
+<input
+type="number"
+id="product-price"
+placeholder="Sale Price"
+/>
+
+<button onclick="saveProduct()">
+Save Product
+</button>
+
+<button
+class="secondary-btn"
+onclick="closeModal()"
+>
+Cancel
+</button>
+
+</div>
+
+</div>
+</body>
+</html>
