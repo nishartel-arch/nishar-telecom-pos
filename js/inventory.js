@@ -63,6 +63,8 @@ return;
 
 }
 
+try{
+
 await addDoc(
 collection(db,'products'),
 {
@@ -74,24 +76,39 @@ createdAt:Date.now()
 }
 );
 
+alert('Product Saved');
+
 closeModal();
 
 loadProducts();
+
+}catch(err){
+
+console.error(err);
+
+alert(err.message);
+
+}
 
 }
 
 
 // LOAD PRODUCTS
 
-async function loadProducts(){
+export async function loadProducts(){
 
 const snapshot =
-await getDocs(collection(db,'products'));
+await getDocs(
+collection(db,'products')
+);
 
 const productList =
 document.getElementById('product-list');
 
+
+if(productList){
 productList.innerHTML='';
+}
 
 let totalProducts=0;
 let lowStock=0;
@@ -105,6 +122,8 @@ totalProducts++;
 if(p.stock <= 5){
 lowStock++;
 }
+
+if(productList){
 
 productList.innerHTML += `
 
@@ -131,14 +150,26 @@ Delete
 </tr>
 
 `;
+}
 
 });
 
-document.getElementById('total-products')
-.innerText=totalProducts;
 
-document.getElementById('low-stock')
-.innerText=lowStock;
+// UPDATE DASHBOARD
+
+const totalEl =
+document.getElementById('total-products');
+
+const lowEl =
+document.getElementById('low-stock');
+
+if(totalEl){
+totalEl.innerText=totalProducts;
+}
+
+if(lowEl){
+lowEl.innerText=lowStock;
+}
 
 }
 
@@ -156,6 +187,8 @@ loadProducts();
 }
 
 
-// INIT
+// AUTO LOAD
 
+setTimeout(()=>{
 loadProducts();
+},500);

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8"/>
@@ -11,13 +12,16 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
-<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+<link rel="stylesheet" href="css/dashboard.css"/>
+<link rel="stylesheet" href="css/billing.css"/>
 
 </head>
 
 <body>
 
-<!-- LOGIN SCREEN -->
+
+<!-- LOGIN PAGE -->
 
 <div id="login-page" class="login-page">
 
@@ -52,9 +56,11 @@
 </div>
 
 
-<!-- APP -->
+<!-- MAIN APP -->
 
 <div id="app" style="display:none;">
+
+  <!-- SIDEBAR -->
 
   <div class="sidebar">
 
@@ -72,6 +78,10 @@
 
     <div class="nav-item">
       Inventory
+    </div>
+
+    <div class="nav-item">
+      Purchases
     </div>
 
     <div class="nav-item">
@@ -93,114 +103,102 @@
   </div>
 
 
+  <!-- DYNAMIC PAGE CONTENT -->
+
   <div class="main-content">
-
-    <div class="topbar">
-
-<h2>Dashboard</h2>
-
-<button onclick="openAddProductModal()">
-+ Product
-</button>
-
-</div>
-
-
-<!-- DASHBOARD -->
-
-<div class="dashboard-grid">
-
-<div class="card">
-<h3>Total Products</h3>
-<div class="big-number" id="total-products">
-0
-</div>
-</div>
-
-<div class="card">
-<h3>Low Stock</h3>
-<div class="big-number" id="low-stock">
-0
-</div>
-</div>
-
-</div>
-
-
-<!-- INVENTORY -->
-
-<div class="inventory-section">
-
-<h2>Inventory</h2>
-
-<table class="product-table">
-
-<thead>
-<tr>
-<th>Name</th>
-<th>Category</th>
-<th>Stock</th>
-<th>Price</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody id="product-list">
-</tbody>
-
-</table>
-
-</div>
-
-</div>
 
   </div>
 
 </div>
 
 
-<script type="module" src="firebase.js"></script>
-<script type="module" src="auth.js"></script>
-<script type="module" src="app.js"></script>
 <!-- PRODUCT MODAL -->
 
 <div id="product-modal" class="modal">
 
+  <div class="modal-content">
+
+    <h2>Add Product</h2>
+
+    <input
+      type="text"
+      id="product-name"
+      placeholder="Product Name"
+    />
+
+    <input
+      type="text"
+      id="product-category"
+      placeholder="Category"
+    />
+
+    <input
+      type="number"
+      id="product-stock"
+      placeholder="Stock"
+    />
+
+    <input
+      type="number"
+      id="product-price"
+      placeholder="Sale Price"
+    />
+
+    <button onclick="saveProduct()">
+      Save Product
+    </button>
+
+    <button
+      class="secondary-btn"
+      onclick="closeModal()"
+    >
+      Cancel
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- CUSTOMER MODAL -->
+
+<div id="customer-modal" class="modal">
+
 <div class="modal-content">
 
-<h2>Add Product</h2>
+<h2>Add Customer</h2>
 
 <input
 type="text"
-id="product-name"
-placeholder="Product Name"
+id="customer-name"
+placeholder="Customer Name"
 />
 
 <input
 type="text"
-id="product-category"
-placeholder="Category"
+id="customer-phone-input"
+placeholder="Phone Number"
+/>
+
+<input
+type="text"
+id="customer-address"
+placeholder="Address"
 />
 
 <input
 type="number"
-id="product-stock"
-placeholder="Stock"
+id="customer-due"
+placeholder="Due Amount"
 />
 
-<input
-type="number"
-id="product-price"
-placeholder="Sale Price"
-/>
-
-<button onclick="saveProduct()">
-Save Product
+<button onclick="saveCustomer()">
+Save Customer
 </button>
 
 <button
 class="secondary-btn"
-onclick="closeModal()"
+onclick="closeCustomerModal()"
 >
 Cancel
 </button>
@@ -208,5 +206,99 @@ Cancel
 </div>
 
 </div>
+
+
+<!-- PURCHASE MODAL -->
+
+<div id="purchase-modal" class="modal">
+
+<div class="modal-content">
+
+<h2>Add Purchase</h2>
+
+<select id="purchase-product">
+
+<option value="">
+Select Product
+</option>
+
+</select>
+
+<input
+type="number"
+id="purchase-qty"
+placeholder="Quantity"
+/>
+
+<input
+type="number"
+id="purchase-price"
+placeholder="Buy Price"
+/>
+
+<input
+type="text"
+id="purchase-supplier"
+placeholder="Supplier Name"
+/>
+
+<button onclick="savePurchase()">
+Save Purchase
+</button>
+
+<button
+class="secondary-btn"
+onclick="closePurchaseModal()"
+>
+Cancel
+</button>
+
+</div>
+
+</div>
+
+
+<!-- MODULE SCRIPTS -->
+
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/app.js"></script>
+
+
+<!-- JSPDF -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+<!-- SERVICE WORKER -->
+
+<script>
+
+if('serviceWorker' in navigator){
+
+window.addEventListener('load',()=>{
+
+navigator.serviceWorker.register('sw.js')
+
+.then(reg=>{
+
+console.log(
+'Service Worker Registered'
+);
+
+})
+
+.catch(err=>{
+
+console.log(err);
+
+});
+
+});
+
+}
+
+</script>
+
 </body>
 </html>
