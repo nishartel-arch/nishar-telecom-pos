@@ -20,7 +20,7 @@
           <line x1="8" y1="21" x2="16" y2="21" />
           <line x1="12" y1="17" x2="12" y2="21" />
         </svg>
-        <span class="logo">Nishar POS</span>
+        <span class="logo">Nishar Telecom</span>
       </div>
       <nav class="sidebar-nav">
         <a href="index.html" class="nav-item">
@@ -144,15 +144,6 @@
       });
     });
 
-    const darkToggle = document.getElementById('darkModeToggle');
-    darkToggle.addEventListener('click', () => {
-      const html = document.documentElement;
-      const current = html.getAttribute('data-theme');
-      html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-      localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
-    });
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
 
     window.showToast = function(message, type = 'success') {
       const container = document.getElementById('toastContainer');

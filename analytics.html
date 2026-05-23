@@ -22,7 +22,7 @@
           <line x1="8" y1="21" x2="16" y2="21" />
           <line x1="12" y1="17" x2="12" y2="21" />
         </svg>
-        <span class="logo">Nishar POS</span>
+        <span class="logo">Nishar Telecom</span>
       </div>
       <nav class="sidebar-nav">
         <a href="index.html" class="nav-item">
@@ -120,18 +120,18 @@
         </div>
 
         <!-- ====== Charts Grid ====== -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+        <div class="analytics-grid">
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Sales Trend</h2>
             </div>
-            <canvas id="salesTrendChart" height="250"></canvas>
+            <div class="chart-panel"><canvas id="salesTrendChart"></canvas></div>
           </div>
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Category Distribution</h2>
             </div>
-            <canvas id="categoryChart" height="250"></canvas>
+            <div class="chart-panel chart-panel--compact"><canvas id="categoryChart"></canvas></div>
           </div>
         </div>
 
@@ -185,16 +185,6 @@
       });
     });
 
-    // Dark mode
-    const darkToggle = document.getElementById('darkModeToggle');
-    darkToggle.addEventListener('click', () => {
-      const html = document.documentElement;
-      const current = html.getAttribute('data-theme');
-      html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-      localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
-    });
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
 
     // Toast
     window.showToast = function(message, type = 'success') {
@@ -226,54 +216,6 @@
       firebase.auth().signOut().then(() => window.location.href = 'login.html');
     });
 
-    // Chart initialisation placeholder – your existing analytics.js will handle actual data
-    document.addEventListener('DOMContentLoaded', () => {
-      // Sales Trend Chart
-      const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
-      new Chart(salesCtx, {
-        type: 'line',
-        data: {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          datasets: [{
-            label: 'Sales',
-            data: [0, 0, 0, 0],
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-            fill: true,
-            tension: 0.4,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-
-      // Category Chart
-      const catCtx = document.getElementById('categoryChart').getContext('2d');
-      new Chart(catCtx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Smartphones', 'Accessories', 'SIM Cards', 'Other'],
-          datasets: [{
-            data: [0, 0, 0, 0],
-            backgroundColor: ['#2563eb', '#16a34a', '#d97706', '#dc2626'],
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
-      });
-    });
   </script>
 </body>
 </html>

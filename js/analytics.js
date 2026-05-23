@@ -1,4 +1,7 @@
 (function () {
+  let salesTrendChart = null;
+  let categoryChart = null;
+
   function qs(id) {
     return document.getElementById(id);
   }
@@ -7,6 +10,33 @@
     const el = qs(id);
     if (el) {
       el.textContent = value;
+    }
+  }
+
+  function readSaleDate(sale) {
+    if (sale.createdAt && sale.createdAt.toDate) {
+      return sale.createdAt.toDate();
+    }
+    return new Date(sale.createdAt || Date.now());
+  }
+
+  function chartColors() {
+    const dark = document.documentElement.getAttribute("data-theme") === "dark";
+    return {
+      grid: dark ? "#334155" : "#e2e8f0",
+      text: dark ? "#cbd5e1" : "#64748b",
+      line: dark ? "#60a5fa" : "#2563eb"
+    };
+  }
+
+  function destroyCharts() {
+    if (salesTrendChart) {
+      salesTrendChart.destroy();
+      salesTrendChart = null;
+    }
+    if (categoryChart) {
+      categoryChart.destroy();
+      categoryChart = null;
     }
   }
 
@@ -30,8 +60,7 @@
       salesSnap.forEach((doc) => {
         const sale = doc.data();
         const total = Number(sale.total || sale.grandTotal || 0);
-        const created = sale.createdAt && sale.createdAt.toDate ? sale.createdAt.toDate() : new Date(sale.createdAt || Date.now());
-        const day = created.toLocaleDateString();
+        const day = readSaleDate(sale).toLocaleDateString();
         revenue += total;
         trend[day] = (trend[day] || 0) + total;
 
@@ -51,6 +80,7 @@
       setText("totalRevenue", formatCurrency(revenue));
       setText("topProduct", topProduct);
       setText("topCustomer", topCustomer);
+      setText("totalCustomers", customersSnap.size);
 
       const lowStockBody = qs("lowStockTableBody");
       if (lowStockBody) {
@@ -62,17 +92,51 @@
             <td>${product.name || "-"}</td>
             <td>${product.category || "-"}</td>
             <td>${product.stock || 0}</td>
-            <td>${formatCurrency(product.price)}</td>
+            <td><span class="badge badge-warning">Low Stock</span></td>
           </tr>
         `).join("");
       }
 
+      destroyCharts();
+
       if (window.Chart && qs("salesTrendChart")) {
-        new Chart(qs("salesTrendChart"), {
-          type: "line",
+        const colors = chartColors();
+        const labels = Object.keys(trend).slice(-12);
+        const values = labels.map((label) => trend[label]);
+        salesTrendChart = new Chart(qs("salesTrendChart"), {
+          type: "bar",
           data: {
-            labels: Object.keys(trend),
-            datasets: [{ label: "Revenue", data: Object.values(trend), borderColor: "#2563eb", tension: 0.3 }]
+            labels,
+            datasets: [{
+              label: "Revenue",
+              data: values,
+              backgroundColor: colors.line,
+              borderRadius: 6,
+              maxBarThickness: 42
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (context) => `Revenue: ${formatCurrency(context.raw)}`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: colors.text },
+                grid: { color: colors.grid }
+              },
+              x: {
+                ticks: { color: colors.text, maxRotation: 0, autoSkip: true },
+                grid: { display: false }
+              }
+            }
           }
         });
       }
@@ -83,16 +147,24 @@
           const category = doc.data().category || "Other";
           categoryCount[category] = (categoryCount[category] || 0) + 1;
         });
-        new Chart(qs("categoryChart"), {
+        categoryChart = new Chart(qs("categoryChart"), {
           type: "doughnut",
           data: {
             labels: Object.keys(categoryCount),
-            datasets: [{ data: Object.values(categoryCount) }]
+            datasets: [{
+              data: Object.values(categoryCount),
+              backgroundColor: ["#2563eb", "#16a34a", "#d97706", "#dc2626", "#7c3aed", "#0891b2"]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom" }
+            }
           }
         });
       }
-
-      setText("totalCustomers", customersSnap.size);
     } catch (error) {
       console.error("Analytics load failed:", error);
       showToast("Could not load analytics", "error");
