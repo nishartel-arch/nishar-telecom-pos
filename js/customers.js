@@ -1,173 +1,134 @@
-import {
-db
-}
-from './firebase.js';
-
-import {
-
-collection,
-addDoc,
-getDocs,
-deleteDoc,
-doc
-
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-// OPEN MODAL
-
-window.openCustomerModal = function(){
-
-document.getElementById('customer-modal')
-.style.display='flex';
-
-}
-
-
-// CLOSE MODAL
-
-window.closeCustomerModal = function(){
-
-document.getElementById('customer-modal')
-.style.display='none';
-
-}
-
-
-// SAVE CUSTOMER
-
-window.saveCustomer = async function(){
-
-const name =
-document.getElementById('customer-name').value;
-
-const phone =
-document.getElementById('customer-phone-input').value;
-
-const address =
-document.getElementById('customer-address').value;
-
-const due =
-Number(
-document.getElementById('customer-due').value || 0
-);
-
-if(!name){
-
-alert('Enter customer name');
-
-return;
-
-}
-
-try{
-
-await addDoc(
-collection(db,'customers'),
-{
-name,
-phone,
-address,
-due,
-createdAt:Date.now()
-}
-);
-
-alert('Customer Saved');
-
-closeCustomerModal();
-
-loadCustomers();
-
-}catch(err){
-
-console.error(err);
-
-alert(err.message);
-
-}
-
-}
-
-
-// LOAD CUSTOMERS
-
-export async function loadCustomers(){
-
-const snapshot =
-await getDocs(
-collection(db,'customers')
-);
-
-const customerList =
-document.getElementById('customer-list');
-
-if(!customerList) return;
-
-customerList.innerHTML='';
-
-let totalCustomers=0;
-
-
-snapshot.forEach(docSnap=>{
-
-const customer =
-docSnap.data();
-
-totalCustomers++;
-
-customerList.innerHTML += `
-
-<tr>
-
-<td>${customer.name}</td>
-
-<td>${customer.phone}</td>
-
-<td>${customer.address}</td>
-
-<td>₹${customer.due}</td>
-
-<td>
-
-<button onclick="deleteCustomer('${docSnap.id}')">
-
-Delete
-
-</button>
-
-</td>
-
-</tr>
-
-`;
-
-});
-
-
-// UPDATE CARD
-
-const totalEl =
-document.getElementById('total-customers');
-
-if(totalEl){
-
-totalEl.innerText=totalCustomers;
-
-}
-
-}
-
-
-// DELETE CUSTOMER
-
-window.deleteCustomer = async function(id){
-
-await deleteDoc(
-doc(db,'customers',id)
-);
-
-loadCustomers();
-
-}
+(function () {
+  let customers = [];
+
+  function qs(id) {
+    return document.getElementById(id);
+  }
+
+  function renderCustomers(rows = customers) {
+    const tbody = qs("customersTableBody");
+    const emptyState = qs("emptyState");
+    if (!tbody) {
+      return;
+    }
+
+    tbody.innerHTML = rows.map((customer) => `
+      <tr>
+        <td>${customer.name || "-"}</td>
+        <td>${customer.phone || "-"}</td>
+        <td>${customer.email || "-"}</td>
+        <td>${customer.address || "-"}</td>
+        <td>
+          <button class="btn btn-secondary" onclick="editCustomer('${customer.id}')">Edit</button>
+          <button class="btn btn-ghost" onclick="deleteCustomer('${customer.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+
+    if (emptyState) {
+      emptyState.style.display = rows.length ? "none" : "block";
+    }
+  }
+
+  window.loadCustomers = async function () {
+    const tbody = qs("customersTableBody");
+    if (!tbody || !window.db) {
+      return;
+    }
+
+    try {
+      const snapshot = await db.collection("customers").orderBy("name").get();
+      customers = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      renderCustomers();
+    } catch (error) {
+      console.error("Customer load failed:", error);
+      showToast("Could not load customers", "error");
+    }
+  };
+
+  window.editCustomer = function (id) {
+    const customer = customers.find((item) => item.id === id);
+    if (!customer) {
+      return;
+    }
+
+    qs("modalTitle").textContent = "Edit Customer";
+    qs("customerId").value = customer.id;
+    qs("customerName").value = customer.name || "";
+    qs("customerPhone").value = customer.phone || "";
+    qs("customerEmail").value = customer.email || "";
+    qs("customerAddress").value = customer.address || "";
+    qs("customerNotes").value = customer.notes || "";
+    qs("customerModal").style.display = "flex";
+  };
+
+  window.deleteCustomer = async function (id) {
+    if (!confirm("Delete this customer?")) {
+      return;
+    }
+
+    try {
+      await db.collection("customers").doc(id).delete();
+      showToast("Customer deleted");
+      loadCustomers();
+    } catch (error) {
+      console.error("Customer delete failed:", error);
+      showToast("Could not delete customer", "error");
+    }
+  };
+
+  function initCustomersPage() {
+    const form = qs("customerForm");
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const id = qs("customerId").value;
+      const customer = {
+        name: qs("customerName").value.trim(),
+        phone: qs("customerPhone").value.trim(),
+        email: qs("customerEmail").value.trim(),
+        address: qs("customerAddress").value.trim(),
+        notes: qs("customerNotes").value.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        if (id) {
+          await db.collection("customers").doc(id).update(customer);
+          showToast("Customer updated");
+        } else {
+          await db.collection("customers").add({
+            ...customer,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          showToast("Customer added");
+        }
+
+        form.reset();
+        qs("customerId").value = "";
+        qs("customerModal").style.display = "none";
+        loadCustomers();
+      } catch (error) {
+        console.error("Customer save failed:", error);
+        showToast(error.message, "error");
+      }
+    });
+
+    const searchInput = qs("searchInput");
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        const term = searchInput.value.toLowerCase();
+        renderCustomers(customers.filter((customer) =>
+          `${customer.name || ""} ${customer.phone || ""} ${customer.email || ""}`.toLowerCase().includes(term)
+        ));
+      });
+    }
+
+    loadCustomers();
+  }
+
+  document.addEventListener("DOMContentLoaded", initCustomersPage);
+})();

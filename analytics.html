@@ -3,20 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nishar Telecom POS – Dashboard</title>
-<link
-rel="stylesheet"
-href="css/variables.css"
-/>
-
-<link
-rel="stylesheet"
-href="css/style.css"
-/>
-  <!-- Inter font (optional, remove if you prefer system fonts) -->
+  <title>Nishar Telecom POS – Analytics</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div class="app-layout">
@@ -31,7 +25,7 @@ href="css/style.css"
         <span class="logo">Nishar POS</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="index.html" class="nav-item active">
+        <a href="index.html" class="nav-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           Dashboard
         </a>
@@ -51,7 +45,7 @@ href="css/style.css"
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           Purchases
         </a>
-        <a href="analytics.html" class="nav-item">
+        <a href="analytics.html" class="nav-item active">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics
         </a>
@@ -73,42 +67,91 @@ href="css/style.css"
         <button class="menu-toggle" id="menuToggle">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <span class="topbar-title">Dashboard</span>
+        <span class="topbar-title">Analytics</span>
         <div class="topbar-actions">
-          <button class="btn btn-ghost btn-icon" title="Notifications">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </button>
-          <button class="btn btn-ghost btn-icon" title="Profile">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </button>
+          <select class="form-select" id="dateRange" style="width: auto; min-width: 120px;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">This Year</option>
+          </select>
         </div>
       </header>
 
-      <main class="page-content" id="app-root">
+      <main class="page-content">
         <!-- ====== Stats Cards ====== -->
-        <div class="stats-grid" id="statsContainer">
-          <!-- Populated by JS -->
+        <div class="stats-grid" id="analyticsStats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <div>
+              <div class="stat-value" id="totalSales">--</div>
+              <div class="stat-label">Total Sales</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--color-success-light); color: var(--color-success);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div>
+              <div class="stat-value" id="totalRevenue">--</div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--color-warning-light); color: var(--color-warning);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            </div>
+            <div>
+              <div class="stat-value" id="topProduct">--</div>
+              <div class="stat-label">Top Product</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--color-danger-light); color: var(--color-danger);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div>
+              <div class="stat-value" id="topCustomer">--</div>
+              <div class="stat-label">Top Customer</div>
+            </div>
+          </div>
         </div>
 
-        <!-- ====== Recent Sales ====== -->
-        <div class="card">
+        <!-- ====== Charts Grid ====== -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Sales Trend</h2>
+            </div>
+            <canvas id="salesTrendChart" height="250"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Category Distribution</h2>
+            </div>
+            <canvas id="categoryChart" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- ====== Low Stock Alert ====== -->
+        <div class="card" style="margin-top: var(--space-6);">
           <div class="card-header">
-            <h2 class="card-title">Recent Sales</h2>
-            <a href="sales.html" class="btn btn-secondary">View All</a>
+            <h2 class="card-title">Low Stock Products</h2>
           </div>
           <div class="table-container">
-            <table id="recentSalesTable">
+            <table id="lowStockTable">
               <thead>
                 <tr>
-                  <th>Invoice</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Date</th>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Current Stock</th>
                   <th>Status</th>
                 </tr>
               </thead>
-              <tbody>
-                <!-- Populated by your existing loadSales() or similar -->
+              <tbody id="lowStockTableBody">
+                <!-- Populated by JS -->
               </tbody>
             </table>
           </div>
@@ -120,7 +163,7 @@ href="css/style.css"
   <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Firebase SDKs (keep your versions) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -128,26 +171,21 @@ href="css/style.css"
   <!-- Your existing scripts -->
   <script src="js/firebase.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/analytics.js"></script>
 
-  <!-- UI helper (inlined for simplicity, you can move to a separate file) -->
+  <!-- UI helpers -->
   <script>
-    // ---------- Sidebar toggle ----------
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
+    // Sidebar toggle
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
     });
-
-    // Close sidebar when clicking a nav link (mobile)
     document.querySelectorAll('.nav-item').forEach(link => {
       link.addEventListener('click', () => {
-        if (window.innerWidth < 768) {
-          sidebar.classList.remove('open');
-        }
+        if (window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
       });
     });
 
-    // ---------- Dark mode toggle ----------
+    // Dark mode
     const darkToggle = document.getElementById('darkModeToggle');
     darkToggle.addEventListener('click', () => {
       const html = document.documentElement;
@@ -155,11 +193,10 @@ href="css/style.css"
       html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
       localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
     });
-    // Load saved theme
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // ---------- Global Toast ----------
+    // Toast
     window.showToast = function(message, type = 'success') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -168,26 +205,15 @@ href="css/style.css"
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           ${type === 'success' 
             ? '<polyline points="20 6 9 17 4 12"/>' 
-            : type === 'error' 
-            ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' 
             : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
         </svg>
         ${message}
       `;
       container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 3000);
     };
 
-    // Replace all alert() calls with showToast() – you can do a global override
-    // or manually replace in your modules. For convenience, we override alert here.
-    window.originalAlert = window.alert;
     window.alert = function(msg) {
-      // If it's an error or success message, route to toast.
-      // (simple heuristic: if includes "error" or "success")
       if (msg.toLowerCase().includes('error') || msg.toLowerCase().includes('fail')) {
         showToast(msg, 'error');
       } else {
@@ -195,59 +221,59 @@ href="css/style.css"
       }
     };
 
-    // ---------- Logout (keep your existing logic) ----------
+    // Logout
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      firebase.auth().signOut().then(() => {
-        window.location.href = 'login.html';
-      });
+      firebase.auth().signOut().then(() => window.location.href = 'login.html');
     });
 
-    // ---------- Dummy stats (replace with real data from your app.js) ----------
-    window.addEventListener('DOMContentLoaded', () => {
-      const statsHTML = `
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="totalProducts">--</div>
-            <div class="stat-label">Total Products</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="totalCustomers">--</div>
-            <div class="stat-label">Customers</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="todaySales">--</div>
-            <div class="stat-label">Today's Sales</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="monthRevenue">--</div>
-            <div class="stat-label">Monthly Revenue</div>
-          </div>
-        </div>
-      `;
-      document.getElementById('statsContainer').innerHTML = statsHTML;
-      // You'll need to update these values with your existing functions (e.g., loadDashboardStats())
+    // Chart initialisation placeholder – your existing analytics.js will handle actual data
+    document.addEventListener('DOMContentLoaded', () => {
+      // Sales Trend Chart
+      const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+      new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          datasets: [{
+            label: 'Sales',
+            data: [0, 0, 0, 0],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // Category Chart
+      const catCtx = document.getElementById('categoryChart').getContext('2d');
+      new Chart(catCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Smartphones', 'Accessories', 'SIM Cards', 'Other'],
+          datasets: [{
+            data: [0, 0, 0, 0],
+            backgroundColor: ['#2563eb', '#16a34a', '#d97706', '#dc2626'],
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
     });
   </script>
-<script src="js/inventory.js"></script>
-<script src="js/sales.js"></script>
-<script src="js/analytics.js"></script>
 </body>
 </html>

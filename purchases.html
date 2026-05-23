@@ -3,17 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nishar Telecom POS – Dashboard</title>
-<link
-rel="stylesheet"
-href="css/variables.css"
-/>
-
-<link
-rel="stylesheet"
-href="css/style.css"
-/>
-  <!-- Inter font (optional, remove if you prefer system fonts) -->
+  <title>Nishar Telecom POS – Purchases</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -31,7 +23,7 @@ href="css/style.css"
         <span class="logo">Nishar POS</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="index.html" class="nav-item active">
+        <a href="index.html" class="nav-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           Dashboard
         </a>
@@ -47,7 +39,7 @@ href="css/style.css"
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Customers
         </a>
-        <a href="purchases.html" class="nav-item">
+        <a href="purchases.html" class="nav-item active">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           Purchases
         </a>
@@ -73,7 +65,7 @@ href="css/style.css"
         <button class="menu-toggle" id="menuToggle">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <span class="topbar-title">Dashboard</span>
+        <span class="topbar-title">Purchase Management</span>
         <div class="topbar-actions">
           <button class="btn btn-ghost btn-icon" title="Notifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -84,43 +76,102 @@ href="css/style.css"
         </div>
       </header>
 
-      <main class="page-content" id="app-root">
-        <!-- ====== Stats Cards ====== -->
-        <div class="stats-grid" id="statsContainer">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- ====== Recent Sales ====== -->
-        <div class="card">
+      <main class="page-content">
+        <div class="card" style="margin-bottom: var(--space-6);">
           <div class="card-header">
-            <h2 class="card-title">Recent Sales</h2>
-            <a href="sales.html" class="btn btn-secondary">View All</a>
+            <h2 class="card-title">Purchase Records</h2>
+            <button class="btn btn-primary" id="addPurchaseBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Purchase
+            </button>
           </div>
+
           <div class="table-container">
-            <table id="recentSalesTable">
+            <table id="purchasesTable">
               <thead>
                 <tr>
-                  <th>Invoice</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
                   <th>Date</th>
-                  <th>Status</th>
+                  <th>Supplier</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Unit Price (₹)</th>
+                  <th>Total (₹)</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                <!-- Populated by your existing loadSales() or similar -->
+              <tbody id="purchasesTableBody">
+                <!-- Populated by loadPurchases() -->
               </tbody>
             </table>
+          </div>
+
+          <div id="emptyState" style="display: none; text-align: center; padding: var(--space-12); color: var(--color-text-muted);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin: 0 auto var(--space-4);">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <p style="font-size: var(--text-lg); font-weight: 500; margin-bottom: var(--space-2);">No purchases found</p>
+            <p>Click "New Purchase" to record your first purchase.</p>
           </div>
         </div>
       </main>
     </div>
   </div>
 
+  <!-- ====== Add/Edit Purchase Modal ====== -->
+  <div class="modal-overlay" id="purchaseModal" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="card-title" id="modalTitle">New Purchase</h2>
+        <button class="btn btn-ghost btn-icon" id="closeModalBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="purchaseForm">
+        <input type="hidden" id="purchaseId" />
+        <div class="form-group">
+          <label class="form-label" for="purchaseProduct">Product *</label>
+          <select class="form-select" id="purchaseProduct" required>
+            <option value="">Select Product</option>
+            <!-- Populated by JS -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseSupplier">Supplier</label>
+          <input type="text" class="form-input" id="purchaseSupplier" placeholder="e.g., Tech Distributors Ltd." />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+          <div class="form-group">
+            <label class="form-label" for="purchaseQuantity">Quantity *</label>
+            <input type="number" class="form-input" id="purchaseQuantity" required min="1" placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="purchaseUnitPrice">Unit Price (₹) *</label>
+            <input type="number" class="form-input" id="purchaseUnitPrice" required min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseDate">Date</label>
+          <input type="date" class="form-input" id="purchaseDate" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseNotes">Notes</label>
+          <textarea class="form-textarea" id="purchaseNotes" rows="2" placeholder="Additional notes..."></textarea>
+        </div>
+        <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-6);">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Purchase
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Firebase SDKs (keep your versions) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -128,26 +179,19 @@ href="css/style.css"
   <!-- Your existing scripts -->
   <script src="js/firebase.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/purchases.js"></script>
 
-  <!-- UI helper (inlined for simplicity, you can move to a separate file) -->
+  <!-- UI helpers -->
   <script>
-    // ---------- Sidebar toggle ----------
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
     });
-
-    // Close sidebar when clicking a nav link (mobile)
     document.querySelectorAll('.nav-item').forEach(link => {
       link.addEventListener('click', () => {
-        if (window.innerWidth < 768) {
-          sidebar.classList.remove('open');
-        }
+        if (window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
       });
     });
 
-    // ---------- Dark mode toggle ----------
     const darkToggle = document.getElementById('darkModeToggle');
     darkToggle.addEventListener('click', () => {
       const html = document.documentElement;
@@ -155,11 +199,9 @@ href="css/style.css"
       html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
       localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
     });
-    // Load saved theme
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // ---------- Global Toast ----------
     window.showToast = function(message, type = 'success') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -168,26 +210,15 @@ href="css/style.css"
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           ${type === 'success' 
             ? '<polyline points="20 6 9 17 4 12"/>' 
-            : type === 'error' 
-            ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' 
             : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
         </svg>
         ${message}
       `;
       container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 3000);
     };
 
-    // Replace all alert() calls with showToast() – you can do a global override
-    // or manually replace in your modules. For convenience, we override alert here.
-    window.originalAlert = window.alert;
     window.alert = function(msg) {
-      // If it's an error or success message, route to toast.
-      // (simple heuristic: if includes "error" or "success")
       if (msg.toLowerCase().includes('error') || msg.toLowerCase().includes('fail')) {
         showToast(msg, 'error');
       } else {
@@ -195,59 +226,21 @@ href="css/style.css"
       }
     };
 
-    // ---------- Logout (keep your existing logic) ----------
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      firebase.auth().signOut().then(() => {
-        window.location.href = 'login.html';
-      });
+      firebase.auth().signOut().then(() => window.location.href = 'login.html');
     });
 
-    // ---------- Dummy stats (replace with real data from your app.js) ----------
-    window.addEventListener('DOMContentLoaded', () => {
-      const statsHTML = `
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="totalProducts">--</div>
-            <div class="stat-label">Total Products</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="totalCustomers">--</div>
-            <div class="stat-label">Customers</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="todaySales">--</div>
-            <div class="stat-label">Today's Sales</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <div>
-            <div class="stat-value" id="monthRevenue">--</div>
-            <div class="stat-label">Monthly Revenue</div>
-          </div>
-        </div>
-      `;
-      document.getElementById('statsContainer').innerHTML = statsHTML;
-      // You'll need to update these values with your existing functions (e.g., loadDashboardStats())
+    const modal = document.getElementById('purchaseModal');
+    document.getElementById('addPurchaseBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = 'New Purchase';
+      document.getElementById('purchaseForm').reset();
+      document.getElementById('purchaseId').value = '';
+      document.getElementById('purchaseDate').value = new Date().toISOString().split('T')[0];
+      modal.style.display = 'flex';
     });
+    document.getElementById('closeModalBtn').addEventListener('click', () => modal.style.display = 'none');
+    document.getElementById('cancelBtn').addEventListener('click', () => modal.style.display = 'none');
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
   </script>
-<script src="js/inventory.js"></script>
-<script src="js/sales.js"></script>
-<script src="js/analytics.js"></script>
 </body>
 </html>

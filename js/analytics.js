@@ -1,87 +1,103 @@
-import {
-db
-}
-from './firebase.js';
+(function () {
+  function qs(id) {
+    return document.getElementById(id);
+  }
 
-import {
+  function setText(id, value) {
+    const el = qs(id);
+    if (el) {
+      el.textContent = value;
+    }
+  }
 
-collection,
-getDocs
+  window.loadAnalytics = async function () {
+    if (!qs("analyticsStats") || !window.db) {
+      return;
+    }
 
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    try {
+      const [salesSnap, productsSnap, customersSnap] = await Promise.all([
+        db.collection("sales").get(),
+        db.collection("products").get(),
+        db.collection("customers").get()
+      ]);
 
+      let revenue = 0;
+      const productCount = {};
+      const customerCount = {};
+      const trend = {};
 
-// LOAD ANALYTICS
+      salesSnap.forEach((doc) => {
+        const sale = doc.data();
+        const total = Number(sale.total || sale.grandTotal || 0);
+        const created = sale.createdAt && sale.createdAt.toDate ? sale.createdAt.toDate() : new Date(sale.createdAt || Date.now());
+        const day = created.toLocaleDateString();
+        revenue += total;
+        trend[day] = (trend[day] || 0) + total;
 
-export async function loadAnalytics(){
+        (sale.items || []).forEach((item) => {
+          const name = item.name || item.productName || "Unknown";
+          productCount[name] = (productCount[name] || 0) + Number(item.quantity || item.qty || 1);
+        });
 
-// SALES
+        const customer = sale.customerName || "Walk-in";
+        customerCount[customer] = (customerCount[customer] || 0) + 1;
+      });
 
-const salesSnapshot =
-await getDocs(
-collection(db,'sales')
-);
+      const topProduct = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+      const topCustomer = Object.entries(customerCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
 
-let revenue=0;
+      setText("totalSales", salesSnap.size);
+      setText("totalRevenue", formatCurrency(revenue));
+      setText("topProduct", topProduct);
+      setText("topCustomer", topCustomer);
 
-let totalOrders=0;
+      const lowStockBody = qs("lowStockTableBody");
+      if (lowStockBody) {
+        const lowStockRows = productsSnap.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((product) => Number(product.stock || 0) <= 5);
+        lowStockBody.innerHTML = lowStockRows.map((product) => `
+          <tr>
+            <td>${product.name || "-"}</td>
+            <td>${product.category || "-"}</td>
+            <td>${product.stock || 0}</td>
+            <td>${formatCurrency(product.price)}</td>
+          </tr>
+        `).join("");
+      }
 
-let estimatedProfit=0;
+      if (window.Chart && qs("salesTrendChart")) {
+        new Chart(qs("salesTrendChart"), {
+          type: "line",
+          data: {
+            labels: Object.keys(trend),
+            datasets: [{ label: "Revenue", data: Object.values(trend), borderColor: "#2563eb", tension: 0.3 }]
+          }
+        });
+      }
 
+      if (window.Chart && qs("categoryChart")) {
+        const categoryCount = {};
+        productsSnap.forEach((doc) => {
+          const category = doc.data().category || "Other";
+          categoryCount[category] = (categoryCount[category] || 0) + 1;
+        });
+        new Chart(qs("categoryChart"), {
+          type: "doughnut",
+          data: {
+            labels: Object.keys(categoryCount),
+            datasets: [{ data: Object.values(categoryCount) }]
+          }
+        });
+      }
 
-salesSnapshot.forEach(docSnap=>{
+      setText("totalCustomers", customersSnap.size);
+    } catch (error) {
+      console.error("Analytics load failed:", error);
+      showToast("Could not load analytics", "error");
+    }
+  };
 
-const sale =
-docSnap.data();
-
-revenue += sale.total;
-
-totalOrders++;
-
-
-// ESTIMATED PROFIT
-
-estimatedProfit += sale.total * 0.25;
-
-});
-
-
-// PRODUCTS
-
-const productSnapshot =
-await getDocs(
-collection(db,'products')
-);
-
-let lowStock=0;
-
-productSnapshot.forEach(docSnap=>{
-
-const product =
-docSnap.data();
-
-if(product.stock <= 5){
-
-lowStock++;
-
-}
-
-});
-
-
-// UPDATE UI
-
-document.getElementById('analytics-revenue')
-.innerText=`₹${revenue}`;
-
-document.getElementById('analytics-profit')
-.innerText=`₹${Math.round(estimatedProfit)}`;
-
-document.getElementById('analytics-orders')
-.innerText=totalOrders;
-
-document.getElementById('analytics-lowstock')
-.innerText=lowStock;
-
-}
+  document.addEventListener("DOMContentLoaded", loadAnalytics);
+})();

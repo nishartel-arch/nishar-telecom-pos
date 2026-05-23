@@ -1,109 +1,126 @@
-import {
-auth
-}
-from './firebase.js';
+// WAIT UNTIL PAGE LOADS
 
-import {
-
-signInWithEmailAndPassword,
-
-createUserWithEmailAndPassword,
-
-onAuthStateChanged,
-
-signOut
-
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+window.addEventListener('DOMContentLoaded',()=>{
 
 
-// LOGIN
+// ======================
+// AUTH CHECK
+// ======================
 
-window.login = async function(){
+auth.onAuthStateChanged((user)=>{
 
-const email =
-document.getElementById('email').value;
-
-const password =
-document.getElementById('password').value;
-
-try{
-
-await signInWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-alert('Login successful');
-
-}catch(err){
-
-alert(err.message);
-
-}
-
-}
+const currentPage =
+window.location.pathname
+.split("/")
+.pop();
 
 
-// REGISTER
+// LOGIN PAGE
 
-window.register = async function(){
-
-const email =
-document.getElementById('email').value;
-
-const password =
-document.getElementById('password').value;
-
-try{
-
-await createUserWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-alert('Account created');
-
-}catch(err){
-
-alert(err.message);
-
-}
-
-}
-
-
-// LOGOUT
-
-window.logout = async function(){
-
-await signOut(auth);
-
-}
-
-
-// SESSION
-
-onAuthStateChanged(auth,user=>{
+if(currentPage === 'login.html'){
 
 if(user){
 
-document.getElementById('login-page')
-.style.display='none';
+window.location.href='index.html';
 
-document.getElementById('app')
-.style.display='flex';
+}
+
+return;
+
+}
+
+
+// ALL OTHER PAGES
+
+if(!user){
+
+window.location.href='login.html';
+
+}
+
+});
+
+
+// ======================
+// LOGIN FORM
+// ======================
+
+const loginForm =
+document.getElementById('loginForm');
+
+
+if(loginForm){
+
+loginForm.addEventListener('submit', async(e)=>{
+
+e.preventDefault();
+
+const email =
+document.getElementById('email').value;
+
+const password =
+document.getElementById('password').value;
+
+try{
+
+await auth.signInWithEmailAndPassword(
+email,
+password
+);
+
+window.location.href='index.html';
+
+}catch(err){
+
+const errorBox =
+document.getElementById('loginError');
+
+if(errorBox){
+
+errorBox.style.display='block';
+
+errorBox.innerText=err.message;
 
 }else{
 
-document.getElementById('login-page')
-.style.display='flex';
-
-document.getElementById('app')
-.style.display='none';
+alert(err.message);
 
 }
+
+}
+
+});
+
+}
+
+
+// ======================
+// LOGOUT
+// ======================
+
+const logoutBtn =
+document.getElementById('logoutBtn');
+
+
+if(logoutBtn){
+
+logoutBtn.addEventListener('click', async()=>{
+
+try{
+
+await auth.signOut();
+
+window.location.href='login.html';
+
+}catch(err){
+
+alert(err.message);
+
+}
+
+});
+
+}
+
 
 });
