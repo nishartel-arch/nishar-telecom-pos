@@ -3,39 +3,31 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      ".firebaserc",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.bat",
+      "**/*.ps1",
+      "**/*.sh",
+      "**/*.md",
+      "**/*.txt",
+      "README.md",
+      "DEPLOY-INSTRUCTIONS.txt",
+      "GITHUB-SETUP.md",
+      "GITHUB-DESKTOP-SETUP.md"
     ],
     "headers": [
       {
+        "source": "**/*.@(html|css|js)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
         "source": "/sw.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "**/*.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "**/*.css",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "**/*.js",
         "headers": [
           {
             "key": "Cache-Control",

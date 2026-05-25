@@ -1,52 +1,70 @@
+/* =============================================
+   NISHAR TELECOM POS — Design Tokens
+   ============================================= */
+
 :root {
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-light: #dbeafe;
-  --color-primary-text: #ffffff;
+  --bg:          #07090F;
+  --surface:     #0D1220;
+  --card:        #111829;
+  --card-hover:  #16202F;
+  --border:      #1C2A3E;
+  --border-mid:  #22334C;
 
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-border: #e2e8f0;
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
+  --primary:       #4B8BF5;
+  --primary-dk:    #2D6CE3;
+  --primary-bg:    rgba(75,139,245,0.1);
+  --primary-glow:  rgba(75,139,245,0.22);
 
-  --color-success: #16a34a;
-  --color-success-light: #dcfce7;
-  --color-warning: #d97706;
-  --color-warning-light: #fef3c7;
-  --color-danger: #dc2626;
-  --color-danger-light: #fee2e2;
+  --success:     #00CFA8;
+  --success-bg:  rgba(0,207,168,0.1);
+  --warning:     #F5B942;
+  --warning-bg:  rgba(245,185,66,0.1);
+  --danger:      #F5615A;
+  --danger-bg:   rgba(245,97,90,0.1);
+  --info:        #38BDF8;
+  --info-bg:     rgba(56,189,248,0.1);
 
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
+  --text:       #CDD9EE;
+  --text-dim:   #8FA3BF;
+  --text-muted: #4F6680;
 
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --leading-normal: 1.5;
+  --sidebar-w: 240px;
+  --topbar-h:  60px;
 
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-full: 999px;
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;
+  --sp-4: 16px;  --sp-5: 20px;  --sp-6: 24px;
+  --sp-8: 32px;  --sp-10: 40px; --sp-12: 48px;
 
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.16);
+  --fs-xs:   0.6875rem;
+  --fs-sm:   0.8125rem;
+  --fs-base: 0.9rem;
+  --fs-md:   1rem;
+  --fs-lg:   1.125rem;
+  --fs-xl:   1.375rem;
+  --fs-2xl:  1.75rem;
+  --fs-3xl:  2.25rem;
 
-  --sidebar-width: 170px;
-  --topbar-height: 58px;
+  --r-sm:   6px;  --r-md: 10px;
+  --r-lg:   14px; --r-xl: 20px; --r-full: 9999px;
 
-  --transition-fast: 150ms ease;
-  --transition-base: 220ms ease;
+  --sh-sm:   0 2px 8px  rgba(0,0,0,0.5);
+  --sh-md:   0 4px 20px rgba(0,0,0,0.5);
+  --sh-lg:   0 8px 40px rgba(0,0,0,0.6);
+  --sh-blue: 0 4px 24px rgba(75,139,245,0.28);
+
+  --ease:      200ms ease;
+  --ease-slow: 350ms cubic-bezier(0.4,0,0.2,1);
+}
+
+[data-theme="light"] {
+  --bg:         #F1F4F9;
+  --surface:    #FFFFFF;
+  --card:       #FFFFFF;
+  --card-hover: #F7F9FC;
+  --border:     #E2E8F0;
+  --border-mid: #CBD5E1;
+  --text:       #1E293B;
+  --text-dim:   #475569;
+  --text-muted: #94A3B8;
+  --primary-bg: rgba(75,139,245,0.08);
 }
