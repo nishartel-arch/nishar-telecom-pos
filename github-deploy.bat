@@ -69,17 +69,35 @@ echo.
 REM --- 8. Push to GitHub ---
 echo Pushing to GitHub...
 git push -u origin HEAD
+if not errorlevel 1 goto push_ok
+
+REM --- 8a. Rejected because GitHub is ahead: sync once and retry ---
+echo.
+echo GitHub has changes your PC doesn't have yet. Trying to sync automatically...
+git pull --rebase origin main
 if errorlevel 1 (
   echo.
-  echo [ERROR] Push failed. Common causes:
-  echo   - Wrong repo URL: clear it with  git remote remove origin  then run again
+  echo [ERROR] Automatic sync could not finish ^(same file changed in both places^).
+  echo To undo the half-done sync, run this once in this folder:
+  echo     git rebase --abort
+  echo then ask for help merging the two versions.
+  echo.
+  pause
+  exit /b 1
+)
+echo Synced. Pushing again...
+git push -u origin HEAD
+if errorlevel 1 (
+  echo.
+  echo [ERROR] Push still failed. Check your internet and GitHub sign-in, then retry.
   echo   - Not signed in: a browser/login window may have opened - finish it, then retry
-  echo   - Remote has commits you don't: run  git pull origin main --rebase  then retry
+  echo   - Wrong repo URL: clear it with  git remote remove origin  then run again
   echo.
   pause
   exit /b 1
 )
 
+:push_ok
 echo.
 echo ============================================
 echo   Done! Your code is on GitHub.
