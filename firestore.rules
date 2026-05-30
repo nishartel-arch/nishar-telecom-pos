@@ -28,6 +28,11 @@ service cloud.firestore {
     }
     function isOwner()   { return roleIs('owner'); }
     function isManager() { return roleIs('manager'); }
+    // A role string must be one of the four known tiers — nothing else can be
+    // written into a profile, even by an owner (guards typos / privilege creep).
+    function validRole(r) {
+      return r is string && r in ['owner', 'manager', 'cashier', 'staff'];
+    }
     // owner or manager — the "back office" tier
     function isManagerUp() { return isOwner() || isManager(); }
     // anyone with an active profile — the "shop floor" tier
@@ -51,12 +56,12 @@ service cloud.firestore {
           && request.resource.data.role == 'staff'
           && request.resource.data.active == true )
         ||
-        isOwner()
+        ( isOwner() && validRole(request.resource.data.role) )
       );
 
-      // Owners manage anyone. A user may edit their own profile but may NOT
-      // change their own role or active flag (no self-escalation).
-      allow update: if isOwner()
+      // Owners manage anyone (any valid role). A user may edit their own profile
+      // but may NOT change their own role or active flag (no self-escalation).
+      allow update: if ( isOwner() && validRole(request.resource.data.role) )
         || ( request.auth.uid == uid
              && request.resource.data.role   == resource.data.role
              && request.resource.data.active == resource.data.active );
@@ -67,8 +72,10 @@ service cloud.firestore {
     // ---- meta (one-time bootstrap marker) ----
     match /meta/{doc} {
       allow read:   if signedIn();
-      // Can only be created once, by the first signed-in user (owner claim).
-      allow create: if signedIn() && !exists(/databases/$(database)/documents/meta/app);
+      // Can only be created once — the 'app' marker, by the first signed-in
+      // user (owner claim). Pinning the doc id stops stray meta/* writes.
+      allow create: if signedIn() && doc == 'app'
+                    && !exists(/databases/$(database)/documents/meta/app);
       allow update, delete: if isOwner();
     }
 

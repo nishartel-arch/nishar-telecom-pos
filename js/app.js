@@ -37,6 +37,8 @@ const APP = (() => {
     warn:      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
     info:      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
     download:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+    search:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    arrow:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
   };
 
   /* ── Nav Pages ─────────────────────────────── */
@@ -287,6 +289,11 @@ const APP = (() => {
       <span class="topbar-title">${title}</span>
       <div class="topbar-spacer"></div>
       <div class="topbar-right">
+        <button class="qs-trigger" id="qs-trigger" title="Quick search (Ctrl/⌘ + K)">
+          ${IC.search}
+          <span class="qs-trigger-label">Search</span>
+          <span class="qs-kbd">Ctrl K</span>
+        </button>
         <span class="topbar-clock" id="clock"></span>
         <div class="topbar-user">
           <div class="user-avatar">${initials}</div>
@@ -300,6 +307,8 @@ const APP = (() => {
       document.getElementById('sidebar')?.classList.toggle('open');
       document.getElementById('sidebar-overlay')?.classList.toggle('open');
     });
+
+    document.getElementById('qs-trigger')?.addEventListener('click', openQuickSearch);
 
     document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
       document.getElementById('sidebar')?.classList.remove('open');
@@ -346,6 +355,7 @@ const APP = (() => {
 
       mountSidebar(page);
       mountTopbar(title, user);
+      mountQuickSearch();
       applyPermissions();
       onReady?.(user);
     });
@@ -422,9 +432,54 @@ const APP = (() => {
     return prefix + '-' + Date.now().toString(36).toUpperCase();
   }
 
+  // Coalesce rapid calls — fires once after `delay` ms of quiet. Ideal for
+  // search-as-you-type boxes so we don't query Firestore on every keystroke.
   function debounce(fn, delay = 300) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+  }
+
+  // Rate-limit a hot handler to at most once per `limit` ms (leading edge),
+  // for scroll / resize / pointermove style streams.
+  function throttle(fn, limit = 200) {
+    let last = 0, pending = null;
+    return (...args) => {
+      const now = Date.now();
+      const run = () => { last = now; fn(...args); };
+      if (now - last >= limit) { run(); }
+      else { clearTimeout(pending); pending = setTimeout(run, limit - (now - last)); }
+    };
+  }
+
+  // JSON-safe localStorage wrapper that never throws (private mode / quota).
+  const store = {
+    get(key, fallback = null) {
+      try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); }
+      catch (e) { return fallback; }
+    },
+    set(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
+    },
+    remove(key) { try { localStorage.removeItem(key); } catch (e) {} },
+  };
+
+  // Copy text to the clipboard with a graceful fallback for old/non-secure
+  // contexts; returns a promise<boolean>.
+  async function copy(text) {
+    const s = String(text == null ? '' : text);
+    try {
+      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(s); return true; }
+      const ta = document.createElement('textarea');
+      ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy'); ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  // Plain grouped number (no currency symbol) — for counts, quantities, etc.
+  function formatNum(n, dp = 0) {
+    return parseFloat(n || 0).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp });
   }
 
   function sanitize(str) {
@@ -613,8 +668,123 @@ const APP = (() => {
     return cogs;
   }
 
+  /* ── Quick-Search Command Palette (Ctrl / ⌘ + K) ──
+     One global overlay, injected once and reused on every page. It indexes
+     the nav pages the signed-in user is actually allowed to open, so it
+     doubles as a fast keyboard-driven navigator. */
+  let _qsMounted = false;
+  let _qsItems = [];
+  let _qsFiltered = [];
+  let _qsActive = 0;
+
+  function qsIndex() {
+    return PAGES
+      .filter(p => { const need = PAGE_PERM[p.id]; return !need || can(need); })
+      .map(p => ({ label: p.label, href: p.href, icon: p.icon, kw: p.label.toLowerCase() }));
+  }
+
+  function qsRender(query = '') {
+    const box = document.getElementById('qs-results');
+    if (!box) return;
+    const q = query.trim().toLowerCase();
+    _qsFiltered = q ? _qsItems.filter(it => it.kw.includes(q)) : _qsItems.slice();
+    _qsActive = 0;
+    if (!_qsFiltered.length) {
+      box.innerHTML = `<div class="qs-empty">No pages match “${sanitize(query)}”</div>`;
+      return;
+    }
+    box.innerHTML =
+      `<div class="qs-group-label">Go to</div>` +
+      _qsFiltered.map((it, i) => `
+        <div class="qs-item ${i === 0 ? 'active' : ''}" data-idx="${i}" role="option">
+          ${it.icon}<span>${it.label}</span>
+          <span class="qs-item-sub">${IC.arrow}</span>
+        </div>`).join('');
+  }
+
+  function qsSetActive(idx) {
+    const items = [...document.querySelectorAll('#qs-results .qs-item')];
+    if (!items.length) return;
+    _qsActive = (idx + items.length) % items.length;
+    items.forEach((el, i) => el.classList.toggle('active', i === _qsActive));
+    items[_qsActive]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function qsGo(idx = _qsActive) {
+    const it = _qsFiltered[idx];
+    if (it) location.href = it.href;
+  }
+
+  function openQuickSearch() {
+    const bd = document.getElementById('qs-backdrop');
+    if (!bd) return;
+    _qsItems = qsIndex();
+    qsRender('');
+    const input = document.getElementById('qs-input');
+    if (input) input.value = '';
+    bd.classList.add('open');
+    setTimeout(() => input?.focus(), 30);
+  }
+
+  function closeQuickSearch() {
+    document.getElementById('qs-backdrop')?.classList.remove('open');
+  }
+
+  function mountQuickSearch() {
+    if (_qsMounted) return;
+    _qsMounted = true;
+
+    const bd = document.createElement('div');
+    bd.className = 'qs-backdrop';
+    bd.id = 'qs-backdrop';
+    bd.innerHTML = `
+      <div class="qs-panel" role="dialog" aria-modal="true" aria-label="Quick search">
+        <div class="qs-search">
+          ${IC.search}
+          <input class="qs-input" id="qs-input" type="text" placeholder="Search pages…"
+                 autocomplete="off" autocorrect="off" spellcheck="false"/>
+          <span class="qs-esc">Esc</span>
+        </div>
+        <div class="qs-results" id="qs-results" role="listbox"></div>
+      </div>`;
+    document.body.appendChild(bd);
+
+    // Click backdrop (but not the panel) to dismiss.
+    bd.addEventListener('click', e => { if (e.target === bd) closeQuickSearch(); });
+
+    const results = bd.querySelector('#qs-results');
+    results.addEventListener('mousemove', e => {
+      const item = e.target.closest('.qs-item');
+      if (item) qsSetActive(parseInt(item.dataset.idx, 10));
+    });
+    results.addEventListener('click', e => {
+      const item = e.target.closest('.qs-item');
+      if (item) qsGo(parseInt(item.dataset.idx, 10));
+    });
+
+    const input = bd.querySelector('#qs-input');
+    input.addEventListener('input', debounce(e => qsRender(e.target.value), 80));
+    input.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); qsSetActive(_qsActive + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); qsSetActive(_qsActive - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); qsGo(); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeQuickSearch(); }
+    });
+
+    // Global shortcut: Ctrl/⌘+K toggles the palette from anywhere.
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        const open = document.getElementById('qs-backdrop')?.classList.contains('open');
+        open ? closeQuickSearch() : openQuickSearch();
+      }
+    });
+  }
+
   /* ── Public API ────────────────────────────── */
-  return { init, toast, openModal, closeModal, showConfirm, currency, fmtDate, fmtDateTime, genId, debounce, sanitize, requireAuth,
+  return { init, toast, openModal, closeModal, showConfirm, currency, fmtDate, fmtDateTime, genId,
+           debounce, throttle, store, copy, formatNum, sanitize, requireAuth,
+           openQuickSearch, closeQuickSearch,
            can, role, audit, backup, applyPermissions, ROLES, skeletonRows, tableMessage, countOf, whatsApp,
            cashCollected, cogsOfSold,
            shopConfig, clearShopConfigCache,

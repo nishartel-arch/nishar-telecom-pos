@@ -13,7 +13,8 @@ A complete, production-ready Point of Sale system built with vanilla HTML/CSS/Ja
 - **Sales History** — Full transaction log, filters, invoice reprint
 - **Analytics** — Revenue charts, payment breakdown, top products (Chart.js)
 - **Themes** — 5 themes (Blue, Purple, Dark, Ocean, Light), persisted to localStorage
-- **PWA / Offline** — Service worker for offline capability
+- **Quick search** — Press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> (or the topbar Search button) for a command-palette to jump between pages
+- **PWA / Offline** — Service worker for offline capability, with a dedicated `offline.html` fallback page
 
 ---
 
@@ -132,6 +133,8 @@ firebase deploy --only hosting
 | `customers`  | name, phone, email, address, createdAt |
 | `sales`      | invoiceNo, customerId, customerName, items[], subtotal, discount, total, paymentMethod, createdAt |
 | `purchases`  | productId, productName, supplierName, refNo, quantity, unitCost, totalCost, notes, createdAt |
+
+> **Full schema:** see [`DATABASE.md`](DATABASE.md) for every collection, field types, relationships, the per-role access matrix, and the cash-basis accounting model.
 
 ---
 

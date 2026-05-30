@@ -2,9 +2,9 @@
    NISHAR TELECOM POS — Service Worker
    Enables offline capability
    ============================================= */
-const CACHE  = 'nishar-pos-v41';
+const CACHE  = 'nishar-pos-v42';
 const ASSETS = [
-  '/', '/index.html', '/login.html',
+  '/', '/index.html', '/login.html', '/offline.html',
   '/billing.html', '/csc.html', '/inventory.html', '/customers.html',
   '/purchases.html', '/analytics.html', '/sales.html', '/expenses.html', '/users.html', '/suppliers.html', '/settings.html',
   '/css/variables.css', '/css/style.css',
@@ -72,7 +72,10 @@ self.addEventListener('fetch', e => {
           }
           return res;
         })
-        .catch(() => caches.match(req).then(c => c || caches.match('/index.html')))
+        // Offline: serve the cached copy of this exact page if we have it,
+        // otherwise the dedicated offline fallback (never the dashboard,
+        // which would be misleading on an unrelated URL).
+        .catch(() => caches.match(req).then(c => c || caches.match('/offline.html')))
     );
     return;
   }

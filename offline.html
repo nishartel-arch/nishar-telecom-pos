@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="blue">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offline — Nishar Telecom POS</title>
+  <meta name="theme-color" content="#030A24"/>
+  <link rel="icon" type="image/svg+xml" href="assets/fav-dashboard.svg"/>
+  <!-- variables.css + style.css are pre-cached by the service worker, so the
+       brand look survives offline. Inline styles below keep this page usable
+       even if those somehow fail to load. -->
+  <link rel="stylesheet" href="css/variables.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', system-ui, sans-serif;
+      min-height: 100vh;
+      display: grid; place-items: center;
+      padding: 24px; text-align: center;
+      color: #ECE7FA;
+      background:
+        radial-gradient(1150px 620px at 7% -12%, rgba(26,86,255,0.42) 0%, rgba(26,86,255,0) 58%),
+        radial-gradient(980px 700px at 100% 0%, rgba(219,39,255,0.34) 0%, rgba(219,39,255,0) 54%),
+        linear-gradient(155deg, #030A24 0%, #071042 48%, #15062C 100%);
+      background-attachment: fixed;
+    }
+    .offline-card {
+      max-width: 420px; width: 100%;
+      padding: 40px 32px;
+      background: rgba(12, 25, 82, 0.5);
+      border: 1px solid rgba(137, 106, 255, 0.42);
+      border-radius: 20px;
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      backdrop-filter: blur(22px) saturate(150%);
+      box-shadow: 0 26px 80px rgba(0,0,0,0.46), 0 0 55px rgba(32,200,255,0.32);
+    }
+    .offline-logo { width: 60px; height: 60px; margin-bottom: 20px; filter: drop-shadow(0 0 14px rgba(255,255,255,0.3)); }
+    .offline-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #FB5E7E; display: inline-block; margin-right: 8px;
+      box-shadow: 0 0 12px #FB5E7E; animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+    .offline-status { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #B9B0DA; margin-bottom: 14px; }
+    h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; }
+    p { color: #B9B0DA; line-height: 1.6; font-size: 0.9rem; margin-bottom: 24px; }
+    .retry-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 26px; border: none; border-radius: 10px;
+      font-family: inherit; font-size: 0.9rem; font-weight: 600; color: #fff; cursor: pointer;
+      background: linear-gradient(135deg, #0B7CFF 0%, #22D3EE 50%, #D946EF 100%);
+      box-shadow: 0 8px 34px rgba(32,200,255,0.38);
+      transition: transform 200ms ease, filter 200ms ease;
+    }
+    .retry-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .offline-hint { margin-top: 22px; font-size: 0.75rem; color: #837AA6; }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <img src="assets/logo-hexagon-dark.svg" alt="Nishar Telecom" class="offline-logo"
+         onerror="this.style.display='none'"/>
+    <div class="offline-status"><span class="offline-dot"></span><span id="conn-label">You're offline</span></div>
+    <h1>No internet connection</h1>
+    <p>Nishar Telecom POS needs a connection to sync sales and inventory. Any page
+       you've already opened stays available — reconnect to pick up live data again.</p>
+    <button class="retry-btn" id="retry-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Try again
+    </button>
+    <div class="offline-hint">This page will refresh automatically when you reconnect.</div>
+  </div>
+
+  <script>
+    var retry = function () { location.reload(); };
+    document.getElementById('retry-btn').addEventListener('click', retry);
+    // Auto-recover the moment the browser regains connectivity.
+    window.addEventListener('online', function () {
+      document.getElementById('conn-label').textContent = 'Back online — reloading…';
+      setTimeout(retry, 600);
+    });
+  </script>
+</body>
+</html>

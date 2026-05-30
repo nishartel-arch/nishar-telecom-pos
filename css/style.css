@@ -1187,3 +1187,237 @@ body.touch-mode #customer-select {
 
 /* Receipt printing is handled via a dedicated popup window in billing.js.
    No @media print rules needed on the main page. */
+
+/* ══════════════════════════════════════════════
+   ENHANCEMENT LAYER v2
+   Glassmorphism polish · richer hover motion ·
+   refined buttons/inputs/tables · mobile UX ·
+   sticky mobile cart · quick-search palette.
+   Purely additive — overrides earlier rules where
+   it appears later in the cascade.
+══════════════════════════════════════════════ */
+
+/* ── Smooth, springy motion on the interactive surfaces ── */
+.card,
+.stat-card,
+.product-card,
+.btn,
+.nav-item,
+.theme-dot,
+.cart-item {
+  transition: transform var(--ease-spring),
+              box-shadow var(--ease-slow),
+              border-color var(--ease),
+              background var(--ease),
+              color var(--ease);
+  will-change: transform;
+}
+
+/* Cards lift a little higher and glow with the theme accent on hover */
+.card:hover,
+.stat-card:hover {
+  transform: var(--lift);
+  border-color: var(--border-mid);
+}
+.stat-card:hover { box-shadow: var(--sh-lg), 0 0 0 1px var(--border-mid), inset 0 1px 0 var(--glass-hi); }
+
+/* Product tiles: lift + accent glow ring */
+.product-card:hover {
+  transform: var(--lift);
+  box-shadow: var(--sh-md), 0 0 0 1px var(--primary), 0 10px 30px var(--primary-glow);
+}
+.product-card:active { transform: translateY(-1px) scale(0.99); }
+
+/* Nav items slide a touch on hover for tactile feedback */
+.nav-item:hover { transform: translateX(2px); }
+.nav-item.active:hover { transform: none; }
+
+/* ── Buttons: animated light sweep + crisper press ── */
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn::after {
+  content: '';
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.28) 50%, transparent 80%);
+  transform: translateX(-120%);
+  transition: transform var(--ease-slow);
+}
+.btn:hover::after { transform: translateX(120%); }
+.btn:active { transform: translateY(1px) scale(0.985); }
+.btn-secondary:hover { transform: translateY(-1px); }
+
+/* ── Inputs: lift on focus + softer ring that matches the accent ── */
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  box-shadow: 0 0 0 3px var(--primary-bg), 0 4px 18px var(--primary-glow);
+  border-color: var(--primary);
+}
+.form-input:hover:not(:focus),
+.form-select:hover:not(:focus),
+.form-textarea:hover:not(:focus) { border-color: var(--border-mid); }
+
+/* ── Tables: clearer hover row with a left accent rail ── */
+tbody tr { position: relative; }
+tbody tr:hover {
+  background: var(--primary-bg);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+th { position: sticky; top: 0; }   /* sticky headers when a table scrolls */
+.table-wrap, .dashboard-table-scroll { position: relative; }
+
+/* ── Badges & avatars get a subtle pop on hover ── */
+.user-avatar { transition: transform var(--ease), box-shadow var(--ease); }
+.topbar-user:hover .user-avatar { transform: scale(1.06); box-shadow: 0 0 0 3px var(--primary-bg); }
+
+/* ══════════════════════════════════════════════
+   QUICK-SEARCH COMMAND PALETTE  (Ctrl / ⌘ + K)
+   Injected once by app.js on every page.
+══════════════════════════════════════════════ */
+.qs-trigger {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  height: 34px; padding: 0 10px 0 12px;
+  background: var(--card); border: 1px solid var(--border-mid);
+  border-radius: var(--r-md); color: var(--text-muted);
+  font-size: var(--fs-sm); cursor: pointer;
+  transition: border-color var(--ease), color var(--ease), background var(--ease);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.qs-trigger:hover { color: var(--text); border-color: var(--primary); }
+.qs-trigger .qs-kbd {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  padding: 1px 6px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--border-soft);
+  color: var(--text-dim);
+}
+.qs-trigger-label { display: inline; }
+
+.qs-backdrop {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(3, 6, 20, 0.55);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 12vh var(--sp-4) var(--sp-4);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--ease);
+}
+.qs-backdrop.open { opacity: 1; pointer-events: auto; }
+
+.qs-panel {
+  width: 100%; max-width: 560px;
+  background: var(--card-hover);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-lg), 0 0 60px var(--primary-glow), inset 0 1px 0 var(--glass-hi);
+  -webkit-backdrop-filter: blur(26px) saturate(150%); backdrop-filter: blur(26px) saturate(150%);
+  overflow: hidden;
+  transform: translateY(-12px) scale(0.98);
+  transition: transform var(--ease-spring);
+}
+.qs-backdrop.open .qs-panel { transform: translateY(0) scale(1); }
+
+.qs-search {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+}
+.qs-search svg { color: var(--text-muted); flex-shrink: 0; }
+.qs-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: 'Sora', sans-serif; font-size: var(--fs-md);
+}
+.qs-input::placeholder { color: var(--text-muted); }
+.qs-esc {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  padding: 2px 7px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--border-soft); color: var(--text-dim);
+}
+
+.qs-results { max-height: 46vh; overflow-y: auto; padding: var(--sp-2); }
+.qs-group-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); padding: var(--sp-3) var(--sp-3) var(--sp-2);
+}
+.qs-item {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: 10px var(--sp-3); border-radius: var(--r-md);
+  color: var(--text-dim); cursor: pointer;
+  transition: background var(--ease), color var(--ease);
+}
+.qs-item svg { flex-shrink: 0; color: var(--text-muted); }
+.qs-item .qs-item-sub { margin-left: auto; font-size: var(--fs-xs); color: var(--text-muted); }
+.qs-item:hover,
+.qs-item.active {
+  background: var(--grad-primary);
+  color: #fff;
+}
+.qs-item.active svg,
+.qs-item:hover svg,
+.qs-item.active .qs-item-sub,
+.qs-item:hover .qs-item-sub { color: #fff; }
+.qs-empty { padding: var(--sp-8) var(--sp-4); text-align: center; color: var(--text-muted); font-size: var(--fs-sm); }
+
+/* ══════════════════════════════════════════════
+   MOBILE UX  +  STICKY BILLING CART
+══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Honour notches / rounded corners on phones */
+  .page-content { padding-bottom: calc(var(--sp-6) + env(safe-area-inset-bottom)); }
+  .toast-stack {
+    left: var(--sp-3); right: var(--sp-3); bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+  }
+  .toast { max-width: none; }
+
+  /* Comfortable 44px+ tap targets */
+  .btn { padding: 11px var(--sp-4); }
+  .btn-icon, .btn-icon-ghost, .menu-btn { width: 42px; height: 42px; }
+  .qty-btn { width: 32px; height: 32px; }
+  .nav-item { padding: 12px var(--sp-3); }
+
+  /* Tables scroll horizontally with momentum instead of squishing */
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+
+  /* Hide the palette's text label, keep the icon button */
+  .qs-trigger-label, .qs-trigger .qs-kbd { display: none; }
+  .qs-trigger { width: 42px; justify-content: center; padding: 0; }
+  .qs-backdrop { padding-top: 8vh; }
+}
+
+/* Sticky cart on mobile: products scroll, the bill stays reachable.
+   On phones the billing grid stacks (single column); we pin the cart
+   to the bottom of the viewport and let its body scroll internally. */
+@media (max-width: 1100px) {
+  .billing-layout { gap: var(--sp-4); }
+}
+@media (max-width: 768px) {
+  .billing-layout { grid-template-columns: 1fr; height: auto; }
+  .product-grid { max-height: 46vh; }
+
+  .cart-panel {
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    max-height: 72vh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: 0 -14px 40px rgba(3, 6, 20, 0.5), inset 0 1px 0 var(--glass-hi);
+  }
+  /* A small grab-handle hint at the top of the sticky cart */
+  .cart-head { position: relative; }
+  .cart-head::before {
+    content: '';
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    width: 38px; height: 4px; border-radius: var(--r-full);
+    background: var(--border-mid);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   ACCESSIBILITY — respect reduced-motion
+══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
