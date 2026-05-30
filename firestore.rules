@@ -1,0 +1,185 @@
+rules_version = '2';
+
+// =====================================================================
+//  Nishar Telecom POS — Firestore Security Rules
+//  Role-based access control. This is the REAL security boundary;
+//  the client-side gating in app.js is only for UX.
+//
+//  Roles: owner > manager > cashier > staff
+//  First owner is claimed on first sign-in (meta/app stamps it once).
+// =====================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ----
+    function signedIn() {
+      return request.auth != null;
+    }
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function hasProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function roleIs(r) {
+      return hasProfile() && profile().active == true && profile().role == r;
+    }
+    function isOwner()   { return roleIs('owner'); }
+    function isManager() { return roleIs('manager'); }
+    // owner or manager — the "back office" tier
+    function isManagerUp() { return isOwner() || isManager(); }
+    // anyone with an active profile — the "shop floor" tier
+    function isStaffUp() {
+      return hasProfile() && profile().active == true;
+    }
+
+    // ---- users (role directory) ----
+    match /users/{uid} {
+      // You can read your own profile; owners can read everyone.
+      allow read: if signedIn() && (request.auth.uid == uid || isOwner());
+
+      // First-run owner claim (only before meta/app exists) OR
+      // self-provision as lowest role OR owner creating anyone.
+      allow create: if signedIn() && (
+        ( request.auth.uid == uid
+          && request.resource.data.role == 'owner'
+          && !exists(/databases/$(database)/documents/meta/app) )
+        ||
+        ( request.auth.uid == uid
+          && request.resource.data.role == 'staff'
+          && request.resource.data.active == true )
+        ||
+        isOwner()
+      );
+
+      // Owners manage anyone. A user may edit their own profile but may NOT
+      // change their own role or active flag (no self-escalation).
+      allow update: if isOwner()
+        || ( request.auth.uid == uid
+             && request.resource.data.role   == resource.data.role
+             && request.resource.data.active == resource.data.active );
+
+      allow delete: if isOwner();
+    }
+
+    // ---- meta (one-time bootstrap marker) ----
+    match /meta/{doc} {
+      allow read:   if signedIn();
+      // Can only be created once, by the first signed-in user (owner claim).
+      allow create: if signedIn() && !exists(/databases/$(database)/documents/meta/app);
+      allow update, delete: if isOwner();
+    }
+
+    // ---- invoice counter ----
+    match /counters/{doc} {
+      allow read:   if isStaffUp();
+      // Anyone who can bill can advance the invoice counter (checkout txn).
+      allow write:  if hasProfile() && profile().active == true
+                    && (profile().role in ['owner', 'manager', 'cashier', 'staff']);
+    }
+
+    // ---- products / inventory ----
+    match /products/{id} {
+      allow read:   if isStaffUp();          // everyone can view stock
+      allow create: if isManagerUp();        // only back office adds products
+      allow update: if isStaffUp();          // cashiers decrement stock at checkout
+      allow delete: if isManagerUp();        // only back office deletes products
+    }
+
+    // ---- sales ----
+    match /sales/{id} {
+      allow read:   if isStaffUp();
+      allow create: if isStaffUp();                         // billing
+      allow update: if isManagerUp();                       // corrections/refunds (back office)
+      allow delete: if isOwner();                           // wiping history is owner-only
+    }
+
+    // ---- customers ----
+    match /customers/{id} {
+      allow read:   if isStaffUp();
+      allow create, update: if isStaffUp();                 // cashiers add/edit customers
+      allow delete: if isManagerUp();
+    }
+
+    // ---- purchases (stock in) ----
+    match /purchases/{id} {
+      allow read:   if isManagerUp();
+      allow create: if isManagerUp();
+      allow update, delete: if isOwner();
+    }
+
+    // ---- audit logs (append-only) ----
+    match /auditLogs/{id} {
+      allow read:   if isManagerUp();
+      allow create: if isStaffUp();                         // any action can be logged
+      allow update: if false;                               // never editable
+      allow delete: if isOwner();                           // owner can prune
+    }
+
+    // ---- due payments (credit-system receipts, append-only by default) ----
+    match /duePayments/{id} {
+      allow read:   if isStaffUp();
+      allow create: if isStaffUp();                         // cashiers receive payments
+      allow update: if isManagerUp();                       // back office can correct
+      allow delete: if isOwner();
+    }
+
+    // ---- refunds (returns against past sales, append-only) ----
+    match /refunds/{id} {
+      allow read:   if isStaffUp();
+      allow create: if isManagerUp();                       // refunds = back-office action
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
+    // ---- suppliers (vendors we buy stock from) ----
+    match /suppliers/{id} {
+      allow read:   if isManagerUp();
+      allow create, update: if isManagerUp();
+      allow delete: if isOwner();
+    }
+
+    // ---- supplier payments (receipts of what WE paid to a supplier) ----
+    match /supplierPayments/{id} {
+      allow read:   if isManagerUp();
+      allow create: if isManagerUp();
+      allow update: if false;                               // append-only
+      allow delete: if isOwner();
+    }
+
+    // ---- shop config (business info shown on receipts) ----
+    match /config/{doc} {
+      allow read:  if hasProfile();                         // every signed-in user can read (receipts need shop info)
+      allow write: if isOwner();                            // only owner can change
+    }
+
+    // ---- held carts (parked bills, resumable from any terminal) ----
+    match /heldCarts/{id} {
+      allow read:   if isStaffUp();
+      allow create: if isStaffUp();
+      allow update: if false;                               // immutable parking slots
+      allow delete: if isStaffUp();                         // resuming or discarding removes it
+    }
+
+    // ---- CSC services (Aadhaar/PAN/certificate logs) ----
+    match /cscServices/{id} {
+      allow read:   if isStaffUp();
+      allow create: if isStaffUp();                         // counter staff log services
+      allow update: if isStaffUp();                         // status updates happen at the counter
+      allow delete: if isManagerUp();
+    }
+
+    // ---- expenses (Phase 2, rules ready in advance) ----
+    match /expenses/{id} {
+      allow read:   if isManagerUp();
+      allow create, update, delete: if isManagerUp();
+    }
+
+    // ---- deny everything else ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

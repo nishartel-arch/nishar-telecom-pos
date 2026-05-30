@@ -1,0 +1,27 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nishar Telecom">
+  <defs>
+    <linearGradient id="badge" x1="22" y1="18" x2="178" y2="182" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#20C8FF"/>
+      <stop offset="0.52" stop-color="#2563FF"/>
+      <stop offset="1" stop-color="#D946EF"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="54" y1="43" x2="145" y2="154" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1B57"/>
+      <stop offset="1" stop-color="#12062D"/>
+    </linearGradient>
+    <filter id="glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.12 0 0 0 0 0.78 0 0 0 0 1 0 0 0 0.85 0"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <path d="M100 14 174 57v86l-74 43-74-43V57z" fill="url(#badge)" filter="url(#glow)"/>
+  <path d="M100 31 158 65v70l-58 34-58-34V65z" fill="url(#inner)" stroke="rgba(255,255,255,0.34)" stroke-width="4"/>
+  <path d="M68 135V63h18l43 44V63h20v72h-18L88 91v44z" fill="#F8FBFF"/>
+  <path d="M67 135 88 91l43 44h-26L86 115v20z" fill="#22D3EE" opacity="0.82"/>
+  <circle cx="151" cy="49" r="10" fill="#FF3D81"/>
+  <circle cx="51" cy="151" r="7" fill="#22D3EE"/>
+</svg>

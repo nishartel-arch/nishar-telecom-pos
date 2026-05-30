@@ -1,0 +1,14 @@
+{
+  "name": "nishar-telecom-pos",
+  "version": "1.0.0",
+  "description": "Point of Sale System for Nishar Telecom",
+  "main": "index.html",
+  "scripts": {
+    "serve": "http-server",
+    "deploy": "firebase deploy --only hosting"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "author": "Nishar Telecom",
+  "license": "MIT"
+}

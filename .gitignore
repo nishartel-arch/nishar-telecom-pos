@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Firebase local cache / runtime
+.firebase/
+.runtimeconfig.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code agent files (not part of the app)
+.claude/
+memory/
